@@ -2,7 +2,6 @@ const { ipcMain, app } = require("electron");
 const fs = require("fs");
 const path = require("path");
 const ytdl = require("ytdl-core");
-const ffmpeg = require("fluent-ffmpeg");
 const sanitize = require("sanitize-filename");
 
 function sanitizeFilename(filename) {
@@ -27,62 +26,23 @@ ipcMain.on("download-video", async (event, arg) => {
 
 	if (ytdl.validateID(id)) {
 		const info = await ytdl.getInfo(id);
-		const videoInfo = ytdl.chooseFormat(info.formats, {
-			quality: "highestvideo",
-			filter: "videoonly",
+		const videoFormatInfo = ytdl.chooseFormat(info.formats, {
+			quality: "highest",
 		});
-		// const audioInfo = ytdl.chooseFormat(info.formats, {
-		// 	quality: "highestaudio",
-		// 	filter: "audioonly",
-		// });
 
-		const videoPartPath = path.join(
-			require("os").homedir(),
-			sanitizeFilename(`${info.videoDetails.title}.videopart`)
-		);
-		const audioPartPath = path.join(
-			require("os").homedir(),
-			sanitizeFilename(`${info.videoDetails.title}.audiopart`)
-		);
-		const videoFinalPath = path.join(
+		const videoPath = path.join(
 			require("os").homedir(),
 			sanitizeFilename(
-				`${info.videoDetails.title}.${videoInfo.container}`
+				`${info.videoDetails.title}.${videoFormatInfo.container}`
 			)
 		);
 
-		// Download the highest quality video and the highest quality audio.
-		const downloads = [
-			ytdl(id, {
-				quality: "highestvideo",
-				filter: "videoonly",
-			}).pipe(fs.createWriteStream(videoPartPath)),
-			ytdl(id, {
-				quality: "highestaudio",
-				filter: "audioonly",
-			}).pipe(fs.createWriteStream(audioPartPath)),
-		];
-
-		let dlps = [];
-		for (const download of downloads) {
-			dlps.push(
-				new Promise((resolve) => {
-					download.on("finish", resolve);
-				})
-			);
-		}
-
-		Promise.all(dlps).then(() => {
-			ffmpeg()
-				.input(videoPartPath)
-				.input(audioPartPath)
-				.on("end", function () {
-					fs.unlink(videoPartPath, () => {});
-					fs.unlink(audioPartPath, () => {});
-					console.log("Done processing!");
-				})
-				.save(videoFinalPath);
-			console.log("Done downloading!");
-		});
+		ytdl(id, {
+			quality: "highest",
+		})
+			.on("finish", () => {
+				console.log("Done downloading!");
+			})
+			.pipe(fs.createWriteStream(videoPath));
 	}
 });
