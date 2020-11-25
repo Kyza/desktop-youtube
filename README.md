@@ -1,3 +1,5 @@
+# Yes, this is active as of this commit. Please wait a bit for updates!
+
 *Looking for a shareable component template? Go here --> [sveltejs/component-template](https://github.com/sveltejs/component-template)*
 
 ---
