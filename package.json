@@ -9,7 +9,7 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/KyzaGitHub/desktop-youtube.git"
+		"url": "https://git.gent.ooo/Kyza/desktop-youtube.git"
 	},
 	"license": "MIT",
 	"scripts": {
